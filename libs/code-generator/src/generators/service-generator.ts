@@ -6,6 +6,8 @@ import {
   WhereCondition,
   ConditionStepConfig,
   CallStepConfig,
+  LoopStepConfig,
+  TryCatchStepConfig,
 } from '../types/config';
 import { ExpressionParser } from '../parsers/expression-parser';
 
@@ -613,14 +615,17 @@ export class ServiceGenerator {
       case 'log':
         return this.generateLogStep(step.config);
       case 'condition':
-        return this.generateConditionStep(
-          step.config as ConditionStepConfig,
-          entity,
-        );
+        return this.generateConditionStep(step.config, entity);
       case 'call':
-        return this.generateCallStep(step.config as CallStepConfig);
+        return this.generateCallStep(step.config);
+      case 'loop':
+        return this.generateLoopStep(step.config, entity);
+      case 'tryCatch':
+        return this.generateTryCatchStep(step.config, entity);
+      case 'transform':
+        return [`// [transform] ${step.config.result} = ${step.config.mode}(...)`];
       default:
-        return [`// TODO: ${step.type} step not implemented`];
+        return [`// TODO: step not implemented`];
     }
   }
 
@@ -896,6 +901,42 @@ export class ServiceGenerator {
       return [`const ${config.result} = ${callExpr};`];
     }
     return [`${callExpr};`];
+  }
+
+  private generateLoopStep(config: any, entity: EntityConfig): string[] {
+    const source = this.expressionParser.parse(config.source);
+    const item = config.itemVar ?? 'item';
+    const index = config.indexVar ? `, ${config.indexVar}` : '';
+    const lines: string[] = [`for (const ${item}${index} of ${source}) {`];
+    for (const step of (config.body ?? [])) {
+      const stepLines = this.generateStepCode(step, entity);
+      stepLines.forEach((line: string) => lines.push(`  ${line}`));
+    }
+    lines.push(`}`);
+    return lines;
+  }
+
+  private generateTryCatchStep(config: any, entity: EntityConfig): string[] {
+    const lines: string[] = ['try {'];
+    for (const step of (config.try ?? [])) {
+      const stepLines = this.generateStepCode(step, entity);
+      stepLines.forEach((line: string) => lines.push(`  ${line}`));
+    }
+    const errVar = config.catch?.errorVar ?? 'err';
+    lines.push(`} catch (${errVar}) {`);
+    for (const step of (config.catch?.steps ?? [])) {
+      const stepLines = this.generateStepCode(step, entity);
+      stepLines.forEach((line: string) => lines.push(`  ${line}`));
+    }
+    if (config.finally && config.finally.length > 0) {
+      lines.push('} finally {');
+      for (const step of config.finally) {
+        const stepLines = this.generateStepCode(step, entity);
+        stepLines.forEach((line: string) => lines.push(`  ${line}`));
+      }
+    }
+    lines.push('}');
+    return lines;
   }
 
   /**
