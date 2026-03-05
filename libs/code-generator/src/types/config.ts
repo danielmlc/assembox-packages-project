@@ -264,6 +264,26 @@ export interface ServiceDependency {
 // 实体配置
 // ============================================================
 
+/**
+ * 生成模式（Generation Gap Pattern）
+ *
+ * - overwrite（默认）：每次生成直接覆盖目标文件，适合早期开发
+ * - base-class：
+ *     生成器输出 Base 类（BaseXxxService / BaseXxxController 等），
+ *     同时首次生成子类骨架（XxxService extends BaseXxxService）。
+ *     子类文件后续不再覆盖，开发者可在其中自由添加业务逻辑。
+ *     目录结构：
+ *       generated/           ← 始终覆盖（禁止手写）
+ *         base-user.service.ts
+ *         base-user.controller.ts
+ *       user.service.ts      ← 首次生成后不再覆盖（可手写）
+ *       user.controller.ts
+ * - protected-blocks：
+ *     在生成的文件中插入 @gen-start / @gen-end 标记，
+ *     下次生成时提取标记内容并重新注入，保护手写代码块。
+ */
+export type GenerationMode = 'overwrite' | 'base-class' | 'protected-blocks';
+
 /** 生成文件控制 */
 export interface GenerationControl {
   /** 是否生成 entity 文件（default: true） */
@@ -276,6 +296,11 @@ export interface GenerationControl {
   controller?: boolean;
   /** 是否生成 module 文件（default: true） */
   module?: boolean;
+  /**
+   * 生成模式（default: 'overwrite'）
+   * 强烈建议团队开发场景使用 'base-class'
+   */
+  mode?: GenerationMode;
 }
 
 /**
