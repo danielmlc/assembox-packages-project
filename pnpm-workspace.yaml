@@ -1,0 +1,6 @@
+packages:
+  - 'libs/*'
+  - 'apps/*'
+
+# 禁用严格peer依赖检查
+strictPeerDependencies: false

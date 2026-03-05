@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    // 模块和输出配置
+    "module": "commonjs",
+    "target": "es2020",        
+    "lib": [                 
+      "es2020"
+    ],
+    // 装饰器相关
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    // 类型检查相关
+    "strict": false,              // 严格的类型检查
+    "strictNullChecks": false,    // 严格的空值检查
+    "noImplicitAny": false,       // 隐式的 any 类型
+    "strictBindCallApply": true, 
+    "noFallthroughCasesInSwitch": true,
+
+    // 模块解析相关
+    "moduleResolution": "node",  // 指定模块解析策略
+    "esModuleInterop": true,    // 更好的模块互操作性
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,  // 允许导入 json 文件
+
+
+    // 输出相关
+    "declaration": true,        // 生成声明文件
+    "declarationMap": true,    // 生成声明文件的 sourcemap
+    "sourceMap": true,
+    "removeComments": true,
+    
+    // 其他
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "baseUrl": "./",
+  }
+}

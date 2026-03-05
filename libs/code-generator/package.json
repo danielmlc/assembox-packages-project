@@ -1,0 +1,33 @@
+{
+  "name": "@cs/code-generator",
+  "version": "1.0.0",
+  "description": "代码生成器工具包",
+  "author": "danielmlc <danielmlc@126.com>",
+  "homepage": "",
+  "license": "ISC",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "prebuild": "rimraf lib",
+    "build": "tsc -p ./tsconfig.json",
+    "watch": "tsc -p ./tsconfig.json --watch",
+    "publish": "pnpm publish --no-git-checks",
+    "pre-publish:beta": "pnpm version prerelease --preid=beta",
+    "publish:beta": "pnpm run pre-publish:beta && pnpm publish --no-git-checks --tag beta"
+  },
+  "dependencies": {
+    "ts-morph": "^21.0.1",
+    "commander": "^11.1.0",
+    "prettier": "^3.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,9 @@
+**/lib/*
+dist
+node_modules
+.eslintrc.js
+.eslintignore
+/apps/**/dist
+/libs/**/lib
+/apps/**/node_modules
+/libs/**/node_modules

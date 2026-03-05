@@ -1,0 +1,99 @@
+{
+  "moduleName": "常用字段模块",
+  "moduleCode": "common-fields",
+  "connectionName": "common",
+  "entities": [
+    {
+      "entityName": "常用字段示例表",
+      "entityCode": "common-fields",
+      "tableName": "common_fields_demo",
+      "entityClassName": "CommonFieldsDemo",
+      "generateService": true,
+      "generateController": true,
+      "fields": [
+        {
+          "fieldName": "主键",
+          "fieldCode": "id",
+          "fieldType": "bigint",
+          "columnName": "id",
+          "primaryKey": true,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "租户编码",
+          "fieldCode": "tenant",
+          "fieldType": "string",
+          "columnName": "tenant",
+          "length": 50,
+          "primaryKey": true,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "单据主键",
+          "fieldCode": "order_id",
+          "fieldType": "bigint",
+          "columnName": "order_id",
+          "primaryKey": true,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "编码",
+          "fieldCode": "code",
+          "fieldType": "string",
+          "columnName": "code",
+          "length": 50,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "名称",
+          "fieldCode": "name",
+          "fieldType": "string",
+          "columnName": "name",
+          "length": 100,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "排序码",
+          "fieldCode": "sort_code",
+          "fieldType": "int",
+          "columnName": "sort_code",
+          "defaultValue": "0",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "fieldName": "启用状态",
+          "fieldCode": "is_enable",
+          "fieldType": "boolean",
+          "columnName": "is_enable",
+          "defaultValue": "1",
+          "required": false,
+          "nullable": true,
+          "comment": "0-禁用，1-启用"
+        },
+        {
+          "fieldName": "组织机构ID",
+          "fieldCode": "org_id",
+          "fieldType": "bigint",
+          "columnName": "org_id",
+          "required": false,
+          "nullable": true
+        },
+        {
+          "fieldName": "备注",
+          "fieldCode": "remark",
+          "fieldType": "string",
+          "columnName": "remark",
+          "length": 500,
+          "required": false,
+          "nullable": true
+        }
+      ]
+    }
+  ]
+}

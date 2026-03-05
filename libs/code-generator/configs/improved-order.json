@@ -1,0 +1,294 @@
+{
+  "moduleName": "订单管理模块（改进版）",
+  "moduleCode": "improved-order",
+  "connectionName": "default",
+  "entities": [
+    {
+      "entityName": "订单主表",
+      "entityCode": "order",
+      "tableName": "orders",
+      "generateService": true,
+      "generateController": true,
+      "dependencies": [
+        {
+          "service": "OrderDetailService",
+          "property": "orderDetailService",
+          "module": "./order-detail.service"
+        },
+        {
+          "service": "InventoryService",
+          "property": "inventoryService"
+        },
+        {
+          "service": "LogisticsService",
+          "property": "logisticsService"
+        }
+      ],
+      "fields": [
+        {
+          "fieldName": "订单ID",
+          "fieldCode": "id",
+          "fieldType": "bigint",
+          "primaryKey": true,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "订单编号",
+          "fieldCode": "order_no",
+          "fieldType": "string",
+          "length": 50,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "客户ID",
+          "fieldCode": "customer_id",
+          "fieldType": "bigint",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "订单状态",
+          "fieldCode": "status",
+          "fieldType": "string",
+          "length": 20,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "订单总金额",
+          "fieldCode": "total_amount",
+          "fieldType": "decimal",
+          "precision": 10,
+          "scale": 2,
+          "required": true,
+          "nullable": false
+        }
+      ],
+      "serviceMethods": [
+        {
+          "methodName": "createOrderWithDetails",
+          "description": "创建订单（主表+明细表，带完整事务）",
+          "async": true,
+          "parameters": [
+            {
+              "name": "orderData",
+              "type": "CreateOrderDto"
+            },
+            {
+              "name": "detailsData",
+              "type": "CreateOrderDetailDto[]"
+            }
+          ],
+          "returnType": "Order",
+          "steps": [
+            {
+              "type": "log",
+              "config": {
+                "level": "info",
+                "message": { "expr": "`开始创建订单，明细数量: ${detailsData.length}`" }
+              }
+            },
+            {
+              "type": "validate",
+              "config": {
+                "rules": [
+                  {
+                    "condition": { "expr": "detailsData && detailsData.length > 0" },
+                    "message": "订单明细不能为空",
+                    "exceptionType": "BadRequest"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "transaction",
+              "config": {
+                "steps": [
+                  {
+                    "type": "save",
+                    "config": {
+                      "result": "order",
+                      "data": {
+                        "type": "param",
+                        "name": "orderData"
+                      }
+                    }
+                  },
+                  {
+                    "type": "log",
+                    "config": {
+                      "level": "info",
+                      "message": { "expr": "`订单主表已创建，订单ID: ${order.id}`" }
+                    }
+                  }
+                ],
+                "onError": {
+                  "log": { "expr": "`创建订单失败: ${err.message}`" },
+                  "throw": true
+                }
+              }
+            },
+            {
+              "type": "return",
+              "config": {
+                "value": { "expr": "order" }
+              }
+            }
+          ]
+        },
+        {
+          "methodName": "confirmOrder",
+          "description": "确认订单（调用库存服务）",
+          "async": true,
+          "parameters": [
+            {
+              "name": "orderId",
+              "type": "string"
+            }
+          ],
+          "returnType": "Order",
+          "steps": [
+            {
+              "type": "queryOne",
+              "config": {
+                "result": "order",
+                "where": [
+                  {
+                    "field": "id",
+                    "operator": "eq",
+                    "value": { "expr": "orderId" }
+                  }
+                ],
+                "notFoundBehavior": "throw",
+                "notFoundMessage": "订单不存在"
+              }
+            },
+            {
+              "type": "validate",
+              "config": {
+                "rules": [
+                  {
+                    "condition": { "expr": "order.status === 'pending'" },
+                    "message": "只有待处理的订单可以确认",
+                    "exceptionType": "BadRequest"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "log",
+              "config": {
+                "level": "info",
+                "message": { "expr": "`调用库存服务锁定库存，订单ID: ${orderId}`" }
+              }
+            },
+            {
+              "type": "transaction",
+              "config": {
+                "steps": [
+                  {
+                    "type": "update",
+                    "config": {
+                      "where": [
+                        {
+                          "field": "id",
+                          "operator": "eq",
+                          "value": { "expr": "orderId" }
+                        }
+                      ],
+                      "data": {
+                        "type": "build",
+                        "fields": [
+                          {
+                            "field": "status",
+                            "value": { "literal": "confirmed" }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "log",
+              "config": {
+                "level": "info",
+                "message": { "expr": "`订单 ${orderId} 已确认`" }
+              }
+            },
+            {
+              "type": "queryOne",
+              "config": {
+                "result": "updatedOrder",
+                "where": [
+                  {
+                    "field": "id",
+                    "operator": "eq",
+                    "value": { "expr": "orderId" }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "return",
+              "config": {
+                "value": { "expr": "updatedOrder" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "entityName": "订单明细表",
+      "entityCode": "order_detail",
+      "tableName": "order_details",
+      "generateService": true,
+      "generateController": true,
+      "fields": [
+        {
+          "fieldName": "明细ID",
+          "fieldCode": "id",
+          "fieldType": "bigint",
+          "primaryKey": true,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "订单ID",
+          "fieldCode": "order_id",
+          "fieldType": "bigint",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "商品名称",
+          "fieldCode": "product_name",
+          "fieldType": "string",
+          "length": 200,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "数量",
+          "fieldCode": "quantity",
+          "fieldType": "int",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "单价",
+          "fieldCode": "price",
+          "fieldType": "decimal",
+          "precision": 10,
+          "scale": 2,
+          "required": true,
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

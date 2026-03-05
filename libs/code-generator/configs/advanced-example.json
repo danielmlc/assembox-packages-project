@@ -1,0 +1,279 @@
+{
+  "moduleName": "订单管理模块",
+  "moduleCode": "order",
+  "connectionName": "default",
+  "entities": [
+    {
+      "entityName": "订单",
+      "entityCode": "order",
+      "tableName": "orders",
+      "generateService": true,
+      "generateController": true,
+      "apiPrefix": "/api/v1/orders",
+      "fields": [
+        {
+          "fieldName": "订单ID",
+          "fieldCode": "id",
+          "fieldType": "bigint",
+          "primaryKey": true,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "订单编号",
+          "fieldCode": "order_no",
+          "fieldType": "string",
+          "length": 50,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "客户ID",
+          "fieldCode": "customer_id",
+          "fieldType": "bigint",
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "订单状态",
+          "fieldCode": "status",
+          "fieldType": "string",
+          "length": 20,
+          "required": true,
+          "nullable": false,
+          "comment": "pending/confirmed/shipped/completed/cancelled"
+        },
+        {
+          "fieldName": "订单金额",
+          "fieldCode": "amount",
+          "fieldType": "decimal",
+          "precision": 10,
+          "scale": 2,
+          "required": true,
+          "nullable": false
+        },
+        {
+          "fieldName": "创建时间",
+          "fieldCode": "created_at",
+          "fieldType": "datetime",
+          "required": false,
+          "nullable": true
+        }
+      ],
+      "serviceMethods": [
+        {
+          "methodName": "findByStatus",
+          "description": "根据状态查询订单列表",
+          "async": true,
+          "parameters": [
+            {
+              "name": "status",
+              "type": "string",
+              "optional": false,
+              "description": "订单状态"
+            }
+          ],
+          "returnType": "Order[]",
+          "steps": [
+            {
+              "type": "log",
+              "comment": "记录查询日志",
+              "config": {
+                "level": "debug",
+                "message": { "expr": "`查询订单状态: ${status}`" }
+              }
+            },
+            {
+              "type": "query",
+              "comment": "查询指定状态的订单",
+              "config": {
+                "result": "orders",
+                "where": [
+                  {
+                    "field": "status",
+                    "operator": "eq",
+                    "value": { "expr": "status" }
+                  }
+                ],
+                "orderBy": [{ "field": "created_at", "direction": "DESC" }]
+              }
+            },
+            {
+              "type": "return",
+              "config": {
+                "value": { "expr": "orders" }
+              }
+            }
+          ]
+        },
+        {
+          "methodName": "calculateTotalAmount",
+          "description": "计算指定客户的订单总金额",
+          "async": true,
+          "parameters": [
+            {
+              "name": "customerId",
+              "type": "string",
+              "optional": false,
+              "description": "客户ID"
+            },
+            {
+              "name": "status",
+              "type": "string",
+              "optional": true,
+              "description": "订单状态（可选）"
+            }
+          ],
+          "returnType": "number",
+          "steps": [
+            {
+              "type": "declare",
+              "comment": "声明查询条件",
+              "config": {
+                "name": "conditions",
+                "type": "any[]",
+                "const": false,
+                "initialValue": { "literal": [] }
+              }
+            },
+            {
+              "type": "query",
+              "comment": "查询客户订单",
+              "config": {
+                "result": "orders",
+                "where": [
+                  {
+                    "field": "customerId",
+                    "operator": "eq",
+                    "value": { "expr": "customerId" }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "declare",
+              "comment": "计算总金额",
+              "config": {
+                "name": "total",
+                "type": "number",
+                "const": true,
+                "initialValue": {
+                  "expr": "orders.reduce((sum, order) => sum + Number(order.amount), 0)"
+                }
+              }
+            },
+            {
+              "type": "log",
+              "config": {
+                "level": "info",
+                "message": { "expr": "`客户 ${customerId} 的订单总金额: ${total}`" }
+              }
+            },
+            {
+              "type": "return",
+              "config": {
+                "value": { "expr": "total" }
+              }
+            }
+          ]
+        },
+        {
+          "methodName": "cancelOrder",
+          "description": "取消订单",
+          "async": true,
+          "parameters": [
+            {
+              "name": "orderId",
+              "type": "string",
+              "optional": false,
+              "description": "订单ID"
+            }
+          ],
+          "returnType": "Order",
+          "steps": [
+            {
+              "type": "queryOne",
+              "comment": "查询订单",
+              "config": {
+                "result": "order",
+                "where": [
+                  {
+                    "field": "id",
+                    "operator": "eq",
+                    "value": { "expr": "orderId" }
+                  }
+                ],
+                "notFoundBehavior": "throw",
+                "notFoundMessage": "订单不存在"
+              }
+            },
+            {
+              "type": "validate",
+              "comment": "验证订单状态",
+              "config": {
+                "rules": [
+                  {
+                    "condition": {
+                      "expr": "order.status === 'pending' || order.status === 'confirmed'"
+                    },
+                    "message": "只有待处理或已确认的订单可以取消",
+                    "exceptionType": "BadRequest"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "update",
+              "comment": "更新订单状态",
+              "config": {
+                "where": [
+                  {
+                    "field": "id",
+                    "operator": "eq",
+                    "value": { "expr": "orderId" }
+                  }
+                ],
+                "data": {
+                  "type": "build",
+                  "fields": [
+                    {
+                      "field": "status",
+                      "value": { "literal": "cancelled" }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "log",
+              "config": {
+                "level": "info",
+                "message": { "expr": "`订单 ${orderId} 已取消`" }
+              }
+            },
+            {
+              "type": "queryOne",
+              "comment": "返回更新后的订单",
+              "config": {
+                "result": "updatedOrder",
+                "where": [
+                  {
+                    "field": "id",
+                    "operator": "eq",
+                    "value": { "expr": "orderId" }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "return",
+              "config": {
+                "value": { "expr": "updatedOrder" }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

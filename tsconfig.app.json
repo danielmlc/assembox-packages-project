@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "declaration": false, // 不生成声明文件
+    "baseUrl": "./", // 编译输出目录
+    // 目标 ECMAScript 版本
+    "target": "es2021",
+    // 使用 CommonJS 模块系统
+    "module": "commonjs",
+    // 使用 Node.js 风格的模块解析
+    "moduleResolution": "node",
+    
+    // 启用与 ES 模块的互操作性
+    "esModuleInterop": true,
+    // 所有严格的类型检查选项
+    "strict": true,
+    // 跳过声明文件的类型检查，提高编译性能
+    "skipLibCheck": true,
+    // 强制文件名大小写一致性
+    "forceConsistentCasingInFileNames": true,
+    // 允许默认导入语法
+    "allowSyntheticDefaultImports": true,
+    
+    // NestJS 需要的装饰器支持
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    
+    // 生成源码映射文件，便于调试
+    "sourceMap": true,
+    // 启用增量编译，提高重复编译速度
+    "incremental": true,
+  }
+}

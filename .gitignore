@@ -1,0 +1,22 @@
+# compiled output
+/dist
+node_modules
+/apps/**/dist
+/apps/**/node_modules
+/libs/**/node_modules
+/libs/**/lib
+/code
+/apps/assembox-storage
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

@@ -1,0 +1,56 @@
+application:
+  name: 'assembox-builder-service'
+  port: 3102
+  serverPath: 'assembox-builder'
+  profiles.active: 'dev,local'
+
+profiles.local:
+  logger:
+    level: 'info'
+
+  docs:
+    name: 'Assembox 构建层服务'
+    describe: '负责代码生成、构建任务管理和 Gitea 推送的构建层服务'
+    version: 1.0
+
+  # TiDB 数据库配置（与存储层共享同一实例）
+  mysql:
+    pfLc:
+      name: 'default'
+      type: 'mysql'
+      host: 'dev-tidb.yearrow.com'
+      port: 4000
+      username: 'dev_yl_dml_deploy'
+      password: 'Ckg9ytXciM'
+      database: 'dev_pf_lc'
+      synchronize: true
+      timeout: 10000
+      logging: false
+
+  # Redis 缓存配置
+  redis:
+    host: '10.79.3.156'
+    port: 6379
+    db: 15
+    username: 'dev_yl_rw_deploy'
+    password: '4AEeHq39qk'
+
+  # OSS 文件存储配置（与存储层共享同一 MinIO）
+  fileStorage:
+    provider: 'minio'
+    accessKey: 'kIE5EybIZYwJ3xTHynf6'
+    secretKey: '1xDBCWi0Ob6KYWeaDnrNKBK48jdUoaEF7oCsyuE5'
+    bucket: 'yunque-dev'
+    secure: false
+    endPoint: 192.168.5.72
+    port: 30394
+
+  gitea:
+    apiUrl: 'https://gitea.yearrow.com/api/v1'
+    token: 'e29357a7bee9bba064be3377326c9cf98fb208c9'
+    defaultOwner: 'assembox'
+    defaultBranch: 'main'
+    defaultAuthor:
+      name: 'assemboxer'
+      email: 'assemboxer@yearrow.com'
+
