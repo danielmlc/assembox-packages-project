@@ -54,7 +54,7 @@ function testContextParsing() {
     ['primaryKeys.length', ctx.primaryKeys.length, 1],
     ['businessFields[0]', ctx.businessFields[0]?.propertyName, 'orderNo'],
     ['businessFields[1]', ctx.businessFields[1]?.propertyName, 'amount'],
-  ] as const;
+  ];
 
   let passed = 0;
   for (const [name, actual, expected] of checks) {
